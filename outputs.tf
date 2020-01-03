@@ -23,11 +23,11 @@ output "subdomain_zone_id" {
 }
 
 output "vpc_private_routing_table_id" {
-  value = "${element(concat(aws_route_table.private.*.id, list("")), 0)}"
+  value = "${concat(aws_route_table.private.*.id, list(""))}"
 }
 
 output "vpc_public_routing_table_id" {
-  value = "${element(concat(aws_route_table.public.*.id, list("")), 0)}"
+  value = "${concat(aws_route_table.public.*.id, list(""))}"
 }
 
 output "depends_id" {
