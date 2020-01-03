@@ -23,7 +23,7 @@ output "subdomain_zone_id" {
 }
 
 output "vpc_private_routing_table_id" {
-  value = "${concat(aws_route_table.private.*.id, list(""))}"
+  value = "${compact(concat(aws_route_table.private.*.id, list("")))}"
 }
 
 output "vpc_public_routing_table_id" {
