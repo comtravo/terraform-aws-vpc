@@ -27,7 +27,7 @@ output "vpc_private_routing_table_id" {
 }
 
 output "vpc_public_routing_table_id" {
-  value = "${concat(aws_route_table.public.*.id, list(""))}"
+  value = "${element(concat(aws_route_table.public.*.id, list("")), 0)}"
 }
 
 output "depends_id" {
