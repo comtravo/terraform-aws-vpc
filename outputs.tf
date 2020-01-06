@@ -7,19 +7,19 @@ output "private_subnets" {
 }
 
 output "vpc_id" {
-  value = "${aws_vpc.vpc.id}"
+  value = "${element(concat(aws_vpc.vpc.*.id, list("")), 0)}"
 }
 
 output "vpc_default_sg" {
-  value = "${aws_default_security_group.vpc-default-sg.id}"
+  value = "${element(concat(aws_default_security_group.vpc-default-sg.*.id, list("")), 0)}"
 }
 
 output "net0ps_zone_id" {
-  value = "${aws_route53_zone.net0ps.zone_id}"
+  value = "${element(concat(aws_route53_zone.net0ps.*.zone_id, list("")), 0)}"
 }
 
 output "subdomain_zone_id" {
-  value = "${aws_route53_zone.subdomain.zone_id}"
+  value = "${element(concat(aws_route53_zone.subdomain.*.zone_id, list("")), 0)}"
 }
 
 output "vpc_private_routing_table_id" {
@@ -27,7 +27,7 @@ output "vpc_private_routing_table_id" {
 }
 
 output "vpc_public_routing_table_id" {
-  value = "${aws_route_table.public.id}"
+  value = "${element(concat(aws_route_table.public.*.id, list("")), 0)}"
 }
 
 output "depends_id" {
