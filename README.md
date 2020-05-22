@@ -22,7 +22,7 @@
 | azs | Availability zones | `list(string)` | n/a | yes |
 | cidr | CIDR | `string` | n/a | yes |
 | enable | Enable or Disable the module | `bool` | n/a | yes |
-| environment | environment | `string` | n/a | yes |
+| environment | Environment | `string` | n/a | yes |
 | replication\_factor | Number of subnets, routing tables, NAT gateways | `number` | n/a | yes |
 | vpc\_name | VPC name | `string` | n/a | yes |
 | depends\_id | For inter module dependencies | `string` | `""` | no |
@@ -35,7 +35,7 @@
 
 | Name | Description |
 |------|-------------|
-| depends\_id | dependency ID |
+| depends\_id | Dependency ID |
 | net0ps\_zone\_id | Private hosted zone ID |
 | private\_subdomain | Private subdomain name |
 | private\_subnets | private subnets |

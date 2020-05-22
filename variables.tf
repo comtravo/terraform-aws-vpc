@@ -10,7 +10,7 @@ variable "cidr" {
 
 variable "environment" {
   type        = string
-  description = "environment"
+  description = "Environment"
 }
 
 variable "enable" {

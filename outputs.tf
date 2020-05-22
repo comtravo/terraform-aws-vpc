@@ -60,6 +60,6 @@ output "vpc_public_routing_table_id" {
 
 output "depends_id" {
   value       = null_resource.dummy_dependency.id
-  description = "dependency ID"
+  description = "Dependency ID"
 }
 
