@@ -59,3 +59,11 @@ variable "azs" {
   type        = list(string)
   description = "Availability zones"
 }
+
+locals {
+  enable_count = var.enable ? 1 : 0
+}
+
+locals {
+  replication_count = local.enable_count * var.replication_factor
+}
