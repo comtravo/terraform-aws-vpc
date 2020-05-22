@@ -1,11 +1,11 @@
 output "public_subnets" {
   value       = var.enable ? aws_subnet.public.*.id : []
-  description = "public subnets"
+  description = "Public subnets"
 }
 
 output "private_subnets" {
   value       = var.enable ? aws_subnet.private.*.id : []
-  description = "private subnets"
+  description = "Private subnets"
 }
 
 output "vpc_id" {

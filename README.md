@@ -38,11 +38,11 @@
 | depends\_id | Dependency ID |
 | net0ps\_zone\_id | Private hosted zone ID |
 | private\_subdomain | Private subdomain name |
-| private\_subnets | private subnets |
+| private\_subnets | Private subnets |
 | private\_zone\_id | Private hosted zone ID |
 | public\_subdomain | Public subdomain name |
 | public\_subdomain\_zone\_id | Subdomain hosted zone ID |
-| public\_subnets | public subnets |
+| public\_subnets | Public subnets |
 | subdomain\_zone\_id | Subdomain hosted zone ID |
 | vpc\_default\_sg | Default VPC security group |
 | vpc\_id | VPC ID |
