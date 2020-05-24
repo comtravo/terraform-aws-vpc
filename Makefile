@@ -31,10 +31,12 @@ develop:
 generate-docs: fmt lint
 	@$(GENERATE_DOCS_COMMAND)
 
-clean:
-	@$(DOCKER_COMPOSE) down -v
+clean-state:
 	@rm -f tests/terraform.tfstate tests/terraform.tfstate.backup
-	@rm -rf ./terraform
+	@rm -rf ./terraform tests/.terraform/
+
+clean-all: clean-state
+	@$(DOCKER_COMPOSE) down -v
 
 logs:
 	@$(DOCKER_COMPOSE) logs -f

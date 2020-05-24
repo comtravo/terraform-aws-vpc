@@ -7,10 +7,11 @@
 
 
 resource "aws_vpc" "vpc" {
-  count                = local.enable_count
-  cidr_block           = var.cidr
-  enable_dns_support   = var.enable_dns_support
-  enable_dns_hostnames = var.enable_dns_hostnames
+  count                            = local.enable_count
+  cidr_block                       = var.cidr
+  enable_dns_support               = var.enable_dns_support
+  enable_dns_hostnames             = var.enable_dns_hostnames
+  assign_generated_ipv6_cidr_block = false
 
   tags = {
     Name        = "${var.vpc_name}-vpc"
