@@ -1,54 +1,37 @@
-provider "aws" {
-  s3_force_path_style         = true
-  skip_credentials_validation = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
-  access_key                  = "This is not an actual access key."
-  secret_key                  = "This is not an actual secret key."
+# provider "aws" {
+#   s3_force_path_style         = true
+#   skip_credentials_validation = true
+#   skip_metadata_api_check     = true
+#   skip_requesting_account_id  = true
+#   access_key                  = "This is not an actual access key."
+#   secret_key                  = "This is not an actual secret key."
 
-  endpoints {
-    ec2     = "http://localstack:4597"
-    iam     = "http://localstack:4593"
-    route53 = "http://localstack:4580"
-    sts     = "http://localstack:4592"
-  }
-}
+#   endpoints {
+#     ec2     = "http://localstack:4597"
+#     iam     = "http://localstack:4593"
+#     route53 = "http://localstack:4580"
+#     sts     = "http://localstack:4592"
+#   }
+# }
 
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_availability_zones" "available" {}
+# data "aws_caller_identity" "current" {}
+# data "aws_region" "current" {}
+# data "aws_availability_zones" "available" {}
 
 
-module "vpc_enabled" {
-  source = "../"
+# module "vpc_enabled" {
+#   source = "../"
 
-  enable             = true
-  vpc_name           = "vpc_enabled"
-  subdomain          = "foo.bar.baz"
-  cidr               = "10.10.0.0/16"
-  azs                = data.aws_availability_zones.available.names
-  nat_az_number      = 1
-  environment        = "vpc_enabled"
-  replication_factor = 3
-}
+#   enable             = true
+#   vpc_name           = "vpc_enabled"
+#   subdomain          = "foo.bar.baz"
+#   cidr               = "10.10.0.0/16"
+#   azs                = data.aws_availability_zones.available.names
+#   nat_az_number      = 1
+#   environment        = "vpc_enabled"
+#   replication_factor = 3
+# }
 
-output "vpc_enabled_outputs" {
-  value = module.vpc_enabled.outputs
-}
-
-module "vpc_disabled" {
-  source = "../"
-
-  enable             = false
-  vpc_name           = "vpc_disabled"
-  subdomain          = "lor.em.ip.sum"
-  cidr               = "10.20.0.0/16"
-  azs                = data.aws_availability_zones.available.names
-  nat_az_number      = 1
-  environment        = "vpc_disabled"
-  replication_factor = 3
-}
-
-output "vpc_disabled_outputs" {
-  value = module.vpc_disabled.outputs
-}
+# output "vpc_enabled_outputs" {
+#   value = module.vpc_enabled.outputs
+# }

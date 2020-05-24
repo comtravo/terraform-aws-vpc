@@ -15,12 +15,16 @@ lint:
 build:
 	@$(DOCKER_COMPOSE) build
 
-test:
+test-unit:
 	@cd tests && go test -v -tags=unit
-	@cd tests && go test -v -tags=integration
+
+test-localstack:
+	@cd tests && go test -v -tags=localstack
+
+test-all: test-unit test-localstack
 
 test-docker:
-	@$(DOCKER_COMPOSE) run --rm terraform make test
+	@$(DOCKER_COMPOSE) run --rm terraform make test-all
 	@$(DOCKER_COMPOSE) run --rm terraform make lint
 	@$(DOCKER_COMPOSE) down -v
 
@@ -32,8 +36,8 @@ generate-docs: fmt lint
 	@$(GENERATE_DOCS_COMMAND)
 
 clean-state:
-	@rm -f tests/terraform.tfstate tests/terraform.tfstate.backup
-	@rm -rf ./terraform tests/.terraform/
+	@find . -type f -name 'terraform.tfstate' | xargs rm -rf
+	@find . -type d -name '.terraform' | xargs rm -rf
 
 clean-all: clean-state
 	@$(DOCKER_COMPOSE) down -v

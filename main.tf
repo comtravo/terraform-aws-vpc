@@ -215,6 +215,7 @@ resource "aws_default_security_group" "vpc-default-sg" {
 }
 
 resource "null_resource" "dummy_dependency" {
+  count = local.enable_count
   depends_on = [
     aws_vpc.vpc,
     aws_route_table.public,
