@@ -15,13 +15,10 @@ lint:
 build:
 	@$(DOCKER_COMPOSE) build
 
-test-unit:
-	@cd tests && go test -v -tags=unit
-
 test-localstack:
 	@cd tests && go test -v -tags=localstack
 
-test-all: test-unit test-localstack
+test-all: test-localstack
 
 test-docker:
 	@$(DOCKER_COMPOSE) run --rm terraform make test-all

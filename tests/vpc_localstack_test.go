@@ -12,6 +12,7 @@ import (
 )
 
 func TestVPCApplyEnabled(t *testing.T) {
+	t.Parallel()
 
 	terraformModuleVars := map[string]interface{}{
 		"enable":            true,
@@ -33,6 +34,7 @@ func TestVPCApplyEnabled(t *testing.T) {
 }
 
 func TestVPCApplyDisabled(t *testing.T) {
+	t.Parallel()
 
 	terraformModuleVars := map[string]interface{}{
 		"enable":            false,
@@ -50,7 +52,7 @@ func TestVPCApplyDisabled(t *testing.T) {
 	// defer terraform.Destroy(t, terraformOptions)
 
 	terraform_apply_output := terraform.InitAndApply(t, terraformOptions)
-	assert.Contains(t, terraform_apply_output, "Apply complete! Resources: 25 added, 0 changed, 0 destroyed.")
+	assert.Contains(t, terraform_apply_output, "Apply complete! Resources: 0 added, 0 changed, 0 destroyed.")
 }
 
 func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *terraform.Options {
