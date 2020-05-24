@@ -15,7 +15,7 @@ func TestVPCApplyEnabled(t *testing.T) {
 	t.Parallel()
 
 	terraformModuleVars := map[string]interface{}{
-		"enable":            true,
+		"enable":             true,
 		"vpc_name":           "vpc_enabled",
 		"subdomain":          "foo.bar.baz",
 		"cidr":               "10.10.0.0/16",
@@ -37,7 +37,7 @@ func TestVPCApplyDisabled(t *testing.T) {
 	t.Parallel()
 
 	terraformModuleVars := map[string]interface{}{
-		"enable":            false,
+		"enable":             false,
 		"vpc_name":           "vpc_disabled",
 		"subdomain":          "foo.bar.bazz",
 		"cidr":               "10.11.0.0/16",
@@ -66,7 +66,7 @@ func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *te
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: testRunFolder,
-		Vars: terraformModuleVars,
+		Vars:         terraformModuleVars,
 	}
 	return terraformOptions
 }

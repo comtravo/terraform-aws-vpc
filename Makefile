@@ -7,6 +7,7 @@ GENERATE_DOCS_COMMAND:=terraform-docs --sort-inputs-by-required markdown table .
 
 fmt:
 	@terraform fmt -recursive
+	@find . -name '*.go' | xargs gofmt -w -s
 
 lint:
 	@terraform fmt -check -recursive -diff=true
