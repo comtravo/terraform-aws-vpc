@@ -25,7 +25,7 @@ pipeline {
             sh(label: 'Building docker image', script: "make build")
             sh(label: 'Testing docker image', script: "make test-docker")
           } finally {
-            sh(label: 'Cleanup', script: "make clean")
+            sh(label: 'Cleanup', script: "make clean-all")
           }
         }
       }
