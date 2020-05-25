@@ -11,6 +11,7 @@ fmt:
 
 lint:
 	@terraform fmt -check -recursive -diff=true
+	@test -z $(shell find . -type f -name '*.go' | xargs gofmt -l)
 	@tflint
 
 build:
@@ -22,8 +23,8 @@ test-localstack:
 test-all: test-localstack
 
 test-docker:
-	@$(DOCKER_COMPOSE) run --rm terraform make test-all
 	@$(DOCKER_COMPOSE) run --rm terraform make lint
+	@$(DOCKER_COMPOSE) run --rm terraform make test-all
 	@$(DOCKER_COMPOSE) down -v
 
 develop:

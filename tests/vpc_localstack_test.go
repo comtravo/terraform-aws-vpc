@@ -35,20 +35,7 @@ func TestVPCApplyEnabledBasic(t *testing.T) {
 	// defer terraform.Destroy(t, terraformOptions)
 
 	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 25)
-
-	ValidateVPC(t, terraformOptions)
-
-	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
-
-	ValidateVPCRoute53ZoneID(t, terraformOptions)
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
-	ValidateVPCRoutingTables(t, terraformOptions)
-
-	ValidateVPCSubnets(t, terraformOptions)
-	ValidateDependId(t, terraformOptions)
+	ValidateTerraformModuleOutputs(t, terraformOptions)
 }
 
 func TestVPCApplyEnabledReplicationFactor(t *testing.T) {
@@ -72,20 +59,7 @@ func TestVPCApplyEnabledReplicationFactor(t *testing.T) {
 	// defer terraform.Destroy(t, terraformOptions)
 
 	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 21)
-
-	ValidateVPC(t, terraformOptions)
-
-	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
-
-	ValidateVPCRoute53ZoneID(t, terraformOptions)
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
-	ValidateVPCRoutingTables(t, terraformOptions)
-
-	ValidateVPCSubnets(t, terraformOptions)
-	ValidateDependId(t, terraformOptions)
+	ValidateTerraformModuleOutputs(t, terraformOptions)
 }
 
 func TestVPCApplyEnabledSingleAvailabilityZone(t *testing.T) {
@@ -109,20 +83,7 @@ func TestVPCApplyEnabledSingleAvailabilityZone(t *testing.T) {
 	// defer terraform.Destroy(t, terraformOptions)
 
 	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 21)
-
-	ValidateVPC(t, terraformOptions)
-
-	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
-
-	ValidateVPCRoute53ZoneID(t, terraformOptions)
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
-	ValidateVPCRoutingTables(t, terraformOptions)
-
-	ValidateVPCSubnets(t, terraformOptions)
-	ValidateDependId(t, terraformOptions)
+	ValidateTerraformModuleOutputs(t, terraformOptions)
 }
 
 func TestVPCApplyEnabledNoPublicSubdomain(t *testing.T) {
@@ -146,20 +107,7 @@ func TestVPCApplyEnabledNoPublicSubdomain(t *testing.T) {
 	// defer terraform.Destroy(t, terraformOptions)
 
 	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 24)
-
-	ValidateVPC(t, terraformOptions)
-
-	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
-
-	ValidateVPCRoute53ZoneID(t, terraformOptions)
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
-	ValidateVPCRoutingTables(t, terraformOptions)
-
-	ValidateVPCSubnets(t, terraformOptions)
-	ValidateDependId(t, terraformOptions)
+	ValidateTerraformModuleOutputs(t, terraformOptions)
 }
 
 func TestVPCApplyDisabled_Basic(t *testing.T) {
@@ -199,6 +147,22 @@ func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *te
 		Vars:         terraformModuleVars,
 	}
 	return terraformOptions
+}
+
+func ValidateTerraformModuleOutputs(t *testing.T, terraformOptions *terraform.Options) {
+	ValidateVPC(t, terraformOptions)
+
+	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
+
+	ValidateVPCRoute53ZoneID(t, terraformOptions)
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
+
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
+
+	ValidateVPCRoutingTables(t, terraformOptions)
+
+	ValidateVPCSubnets(t, terraformOptions)
+	ValidateDependId(t, terraformOptions)
 }
 
 func ValidateVPCSubnets(t *testing.T, terraformOptions *terraform.Options) {
