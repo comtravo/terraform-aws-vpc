@@ -8,21 +8,24 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestVPCApplyEnabled(t *testing.T) {
+func TestVPCApplyEnabled_Basic(t *testing.T) {
 	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
 
 	terraformModuleVars := map[string]interface{}{
 		"enable":             true,
-		"vpc_name":           "vpc_enabled",
+		"vpc_name":           vpc_name,
 		"subdomain":          "foo.bar.baz",
 		"cidr":               "10.10.0.0/16",
 		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
 		"nat_az_number":      1,
-		"environment":        "vpc_enabled",
+		"environment":        vpc_name,
 		"replication_factor": 3,
 	}
 
@@ -30,61 +33,36 @@ func TestVPCApplyEnabled(t *testing.T) {
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
-	terraform_apply_output := terraform.InitAndApply(t, terraformOptions)
-	assert.Contains(t, terraform_apply_output, "Apply complete! Resources: 25 added, 0 changed, 0 destroyed.")
+	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 25)
 
-	private_subnets := terraform.OutputList(t, terraformOptions, "private_subnets")
-	public_subnets := terraform.OutputList(t, terraformOptions, "public_subnets")
-	assert.Len(t, private_subnets, 3)
-	assert.Len(t, public_subnets, 3)
-	assert.NotEqual(t, public_subnets, private_subnets)
+	ValidateVPC(t, terraformOptions)
 
-	vpc_id := terraform.Output(t, terraformOptions, "vpc_id")
-	assert.Regexp(t, "vpc-*", vpc_id)
+	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
 
-	vpc_default_sg := terraform.Output(t, terraformOptions, "vpc_default_sg")
-	assert.Regexp(t, "sg-*", vpc_default_sg)
+	ValidateVPCRoute53ZoneID(t, terraformOptions)
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
 
-	net0ps_zone_id := terraform.Output(t, terraformOptions, "net0ps_zone_id")
-	private_zone_id := terraform.Output(t, terraformOptions, "private_zone_id")
-	subdomain_zone_id := terraform.Output(t, terraformOptions, "subdomain_zone_id")
-	public_subdomain_zone_id := terraform.Output(t, terraformOptions, "public_subdomain_zone_id")
-	assert.NotEqual(t, "", net0ps_zone_id)
-	assert.NotEqual(t, "", private_zone_id)
-	assert.Equal(t, net0ps_zone_id, private_zone_id)
-	assert.NotEqual(t, "", subdomain_zone_id)
-	assert.NotEqual(t, "", public_subdomain_zone_id)
-	assert.Equal(t, subdomain_zone_id, public_subdomain_zone_id)
-	assert.NotEqual(t, private_zone_id, public_subdomain_zone_id)
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
 
-	public_subdomain := terraform.Output(t, terraformOptions, "public_subdomain")
-	assert.Equal(t, terraformModuleVars["subdomain"], public_subdomain)
+	ValidateVPCRoutingTables(t, terraformOptions)
 
-	private_subdomain := terraform.Output(t, terraformOptions, "private_subdomain")
-	assert.Equal(t, fmt.Sprintf("%s-net0ps.com.", terraformModuleVars["vpc_name"]), private_subdomain)
-
-	vpc_private_routing_table_id := terraform.Output(t, terraformOptions, "vpc_private_routing_table_id")
-	vpc_public_routing_table_id := terraform.Output(t, terraformOptions, "vpc_public_routing_table_id")
-	assert.Regexp(t, "rtb-*", vpc_private_routing_table_id)
-	assert.Regexp(t, "rtb-*", vpc_public_routing_table_id)
-	assert.NotEqual(t, vpc_private_routing_table_id, vpc_public_routing_table_id)
-
-	depends_id := terraform.Output(t, terraformOptions, "depends_id")
-	assert.NotEqual(t, "", depends_id)
-
+	ValidateVPCSubnets(t, terraformOptions)
+	ValidateDependId(t, terraformOptions)
 }
 
-func TestVPCApplyDisabled(t *testing.T) {
+func TestVPCApplyDisabled_Basic(t *testing.T) {
 	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_disabled-%s", random.UniqueId())
 
 	terraformModuleVars := map[string]interface{}{
 		"enable":             false,
-		"vpc_name":           "vpc_disabled",
-		"subdomain":          "foo.bar.bazz",
-		"cidr":               "10.11.0.0/16",
+		"vpc_name":           vpc_name,
+		"subdomain":          "foo.bar.baz",
+		"cidr":               "10.10.0.0/16",
 		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
 		"nat_az_number":      1,
-		"environment":        "vpc_disabled",
+		"environment":        vpc_name,
 		"replication_factor": 3,
 	}
 
@@ -92,9 +70,9 @@ func TestVPCApplyDisabled(t *testing.T) {
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
-	terraform_apply_output := terraform.InitAndApply(t, terraformOptions)
-	assert.Contains(t, terraform_apply_output, "Apply complete! Resources: 0 added, 0 changed, 0 destroyed.")
+	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 0)
 }
+
 
 func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *terraform.Options {
 	testRunFolder, err := files.CopyTerraformFolderToTemp("../", t.Name())
@@ -111,3 +89,68 @@ func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *te
 	}
 	return terraformOptions
 }
+
+func ValidateVPCSubnets(t *testing.T, terraformOptions *terraform.Options) {
+	private_subnets := terraform.OutputList(t, terraformOptions, "private_subnets")
+	public_subnets := terraform.OutputList(t, terraformOptions, "public_subnets")
+
+	assert.Len(t, private_subnets, terraformOptions.Vars["replication_factor"].(int))
+	assert.Len(t, public_subnets, terraformOptions.Vars["replication_factor"].(int))
+	assert.NotEqual(t, public_subnets, private_subnets)
+}
+
+func ValidateVPC(t *testing.T, terraformOptions *terraform.Options) {
+	vpc_id := terraform.Output(t, terraformOptions, "vpc_id")
+	assert.Regexp(t, "vpc-*", vpc_id)
+}
+
+func ValidateVPCDefaultSecurityGroup(t *testing.T, terraformOptions *terraform.Options) {
+	vpc_default_sg := terraform.Output(t, terraformOptions, "vpc_default_sg")
+	assert.Regexp(t, "sg-*", vpc_default_sg)
+}
+
+func ValidateVPCRoute53ZoneID(t *testing.T, terraformOptions *terraform.Options) {
+	net0ps_zone_id := terraform.Output(t, terraformOptions, "net0ps_zone_id")
+	private_zone_id := terraform.Output(t, terraformOptions, "private_zone_id")
+
+	subdomain_zone_id := terraform.Output(t, terraformOptions, "subdomain_zone_id")
+	public_subdomain_zone_id := terraform.Output(t, terraformOptions, "public_subdomain_zone_id")
+
+	assert.NotEqual(t, "", net0ps_zone_id)
+	assert.NotEqual(t, "", private_zone_id)
+	assert.Equal(t, net0ps_zone_id, private_zone_id)
+
+	assert.NotEqual(t, "", subdomain_zone_id)
+	assert.NotEqual(t, "", public_subdomain_zone_id)
+	assert.Equal(t, subdomain_zone_id, public_subdomain_zone_id)
+
+	assert.NotEqual(t, private_zone_id, public_subdomain_zone_id)
+}
+
+func ValidateVPCRoute53ZoneName(t *testing.T, terraformOptions *terraform.Options) {
+	public_subdomain := terraform.Output(t, terraformOptions, "public_subdomain")
+	private_subdomain := terraform.Output(t, terraformOptions, "private_subdomain")
+
+	assert.Equal(t, terraformOptions.Vars["subdomain"], public_subdomain)
+	assert.Equal(t, fmt.Sprintf("%s-net0ps.com.", terraformOptions.Vars["vpc_name"]), private_subdomain)
+}
+
+func ValidateVPCRoutingTables(t *testing.T, terraformOptions *terraform.Options) {
+	vpc_private_routing_table_id := terraform.Output(t, terraformOptions, "vpc_private_routing_table_id")
+	vpc_public_routing_table_id := terraform.Output(t, terraformOptions, "vpc_public_routing_table_id")
+
+	assert.Regexp(t, "rtb-*", vpc_private_routing_table_id)
+	assert.Regexp(t, "rtb-*", vpc_public_routing_table_id)
+	assert.NotEqual(t, vpc_private_routing_table_id, vpc_public_routing_table_id)
+}
+
+func ValidateDependId(t *testing.T, terraformOptions *terraform.Options) {
+	depends_id := terraform.Output(t, terraformOptions, "depends_id")
+	assert.NotEqual(t, "", depends_id)
+}
+
+func TerraformApplyAndVerifyResourcesCreated(t *testing.T, terraformOptions *terraform.Options, expectedNumberOfResourcesCreated int) {
+	terraform_apply_output := terraform.InitAndApply(t, terraformOptions)
+	assert.Contains(t, terraform_apply_output, fmt.Sprintf("Apply complete! Resources: %d added, 0 changed, 0 destroyed.", expectedNumberOfResourcesCreated))
+}
+
