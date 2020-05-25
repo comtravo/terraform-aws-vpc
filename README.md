@@ -1,3 +1,20 @@
+# Terraform AWS module for creating VPC resources
+
+## Introduction
+
+This module creates a AWS VPC and all the resources related to it.
+
+## Usage  
+Checkout [example.tf](./examples/example.tf) for how to use this module
+
+## Authors
+
+Module managed by [Comtravo](https://github.com/comtravo).
+
+## License
+
+MIT Licensed. See [LICENSE](LICENSE) for full details.
+
 ## Requirements
 
 | Name | Version |
