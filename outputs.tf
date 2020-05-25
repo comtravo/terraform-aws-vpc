@@ -8,7 +8,9 @@ locals {
     subdomain_zone_id            = var.enable ? aws_route53_zone.subdomain[0].zone_id : ""
     vpc_private_routing_table_id = var.enable ? aws_route_table.private[0].id : ""
     vpc_public_routing_table_id  = var.enable ? aws_route_table.public[0].id : ""
+    private_subdomain            = var.enable ? aws_route53_zone.net0ps[0].name : ""
     depends_id                   = var.enable ? null_resource.dummy_dependency[0].id : ""
+    nat_gateway_ids              = var.enable ? aws_nat_gateway.nat.*.id : []
   }
 }
 
@@ -37,9 +39,34 @@ output "net0ps_zone_id" {
   description = "Private hosted zone id"
 }
 
+output "private_zone_id" {
+  value       = local.outputs.net0ps_zone_id
+  description = "Private hosted zone name"
+}
+
+output "public_subdomain" {
+  value       = var.subdomain
+  description = "Public hosted zone name"
+}
+
+output "private_subdomain" {
+  value       = local.outputs.private_subdomain
+  description = "Private hosted zone name"
+}
+
 output "subdomain_zone_id" {
   value       = local.outputs.subdomain_zone_id
   description = "Public hosted zone id"
+}
+
+output "public_subdomain_zone_id" {
+  value       = local.outputs.subdomain_zone_id
+  description = "Public hosted zone id"
+}
+
+output "nat_gateway_ids" {
+  value       = local.outputs.nat_gateway_ids
+  description = "NAT gateway ids"
 }
 
 output "vpc_private_routing_table_id" {

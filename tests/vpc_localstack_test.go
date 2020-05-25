@@ -116,8 +116,6 @@ func ValidateTerraformModuleOutputs(t *testing.T, terraformOptions *terraform.Op
 	ValidateVPCRoute53ZoneID(t, terraformOptions)
 	ValidateVPCRoute53ZoneName(t, terraformOptions)
 
-	ValidateVPCRoute53ZoneName(t, terraformOptions)
-
 	ValidateVPCRoutingTables(t, terraformOptions)
 
 	ValidateVPCSubnets(t, terraformOptions)
@@ -128,8 +126,8 @@ func ValidateVPCSubnets(t *testing.T, terraformOptions *terraform.Options) {
 	private_subnets := terraform.OutputList(t, terraformOptions, "private_subnets")
 	public_subnets := terraform.OutputList(t, terraformOptions, "public_subnets")
 
-	assert.Len(t, private_subnets, terraformOptions.Vars["replication_factor"].(int))
-	assert.Len(t, public_subnets, terraformOptions.Vars["replication_factor"].(int))
+	assert.Len(t, private_subnets, terraformOptions.Vars["private_subnets"].(map[string]int)["number_of_subnets"])
+	assert.Len(t, public_subnets, terraformOptions.Vars["public_subnets"].(map[string]int)["number_of_subnets"])
 	assert.NotEqual(t, public_subnets, private_subnets)
 }
 
