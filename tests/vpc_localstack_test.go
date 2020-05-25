@@ -3,6 +3,7 @@
 package test
 
 import (
+	"fmt"
 	"path"
 	"testing"
 
@@ -31,6 +32,46 @@ func TestVPCApplyEnabled(t *testing.T) {
 
 	terraform_apply_output := terraform.InitAndApply(t, terraformOptions)
 	assert.Contains(t, terraform_apply_output, "Apply complete! Resources: 25 added, 0 changed, 0 destroyed.")
+
+	private_subnets := terraform.OutputList(t, terraformOptions, "private_subnets")
+	public_subnets := terraform.OutputList(t, terraformOptions, "public_subnets")
+	assert.Len(t, private_subnets, 3)
+	assert.Len(t, public_subnets, 3)
+	assert.NotEqual(t, public_subnets, private_subnets)
+
+	vpc_id := terraform.Output(t, terraformOptions, "vpc_id")
+	assert.Regexp(t, "vpc-*", vpc_id)
+
+	vpc_default_sg := terraform.Output(t, terraformOptions, "vpc_default_sg")
+	assert.Regexp(t, "sg-*", vpc_default_sg)
+
+	net0ps_zone_id := terraform.Output(t, terraformOptions, "net0ps_zone_id")
+	private_zone_id := terraform.Output(t, terraformOptions, "private_zone_id")
+	subdomain_zone_id := terraform.Output(t, terraformOptions, "subdomain_zone_id")
+	public_subdomain_zone_id := terraform.Output(t, terraformOptions, "public_subdomain_zone_id")
+	assert.NotEqual(t, "", net0ps_zone_id)
+	assert.NotEqual(t, "", private_zone_id)
+	assert.Equal(t, net0ps_zone_id, private_zone_id)
+	assert.NotEqual(t, "", subdomain_zone_id)
+	assert.NotEqual(t, "", public_subdomain_zone_id)
+	assert.Equal(t, subdomain_zone_id, public_subdomain_zone_id)
+	assert.NotEqual(t, private_zone_id, public_subdomain_zone_id)
+
+	public_subdomain := terraform.Output(t, terraformOptions, "public_subdomain")
+	assert.Equal(t, terraformModuleVars["subdomain"], public_subdomain)
+
+	private_subdomain := terraform.Output(t, terraformOptions, "private_subdomain")
+	assert.Equal(t, fmt.Sprintf("%s-net0ps.com.", terraformModuleVars["vpc_name"]), private_subdomain)
+
+	vpc_private_routing_table_id := terraform.Output(t, terraformOptions, "vpc_private_routing_table_id")
+	vpc_public_routing_table_id := terraform.Output(t, terraformOptions, "vpc_public_routing_table_id")
+	assert.Regexp(t, "rtb-*", vpc_private_routing_table_id)
+	assert.Regexp(t, "rtb-*", vpc_public_routing_table_id)
+	assert.NotEqual(t, vpc_private_routing_table_id, vpc_public_routing_table_id)
+
+	depends_id := terraform.Output(t, terraformOptions, "depends_id")
+	assert.NotEqual(t, "", depends_id)
+
 }
 
 func TestVPCApplyDisabled(t *testing.T) {
