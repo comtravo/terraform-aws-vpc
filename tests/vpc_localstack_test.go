@@ -5,6 +5,7 @@ package test
 import (
 	"fmt"
 	"path"
+	"regexp"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -13,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestVPCApplyEnabled_Basic(t *testing.T) {
+func TestVPCApplyEnabledBasic(t *testing.T) {
 	t.Parallel()
 
 	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
@@ -50,6 +51,117 @@ func TestVPCApplyEnabled_Basic(t *testing.T) {
 	ValidateDependId(t, terraformOptions)
 }
 
+func TestVPCApplyEnabledReplicationFactor(t *testing.T) {
+	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
+
+	terraformModuleVars := map[string]interface{}{
+		"enable":             true,
+		"vpc_name":           vpc_name,
+		"subdomain":          "foo.bar.baz",
+		"cidr":               "10.10.0.0/16",
+		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
+		"nat_az_number":      1,
+		"environment":        vpc_name,
+		"replication_factor": 2,
+	}
+
+	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	t.Logf("Terraform module inputs: %+v", *terraformOptions)
+	// defer terraform.Destroy(t, terraformOptions)
+
+	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 21)
+
+	ValidateVPC(t, terraformOptions)
+
+	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
+
+	ValidateVPCRoute53ZoneID(t, terraformOptions)
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
+
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
+
+	ValidateVPCRoutingTables(t, terraformOptions)
+
+	ValidateVPCSubnets(t, terraformOptions)
+	ValidateDependId(t, terraformOptions)
+}
+
+func TestVPCApplyEnabledSingleAvailabilityZone(t *testing.T) {
+	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
+
+	terraformModuleVars := map[string]interface{}{
+		"enable":             true,
+		"vpc_name":           vpc_name,
+		"subdomain":          "foo.bar.baz",
+		"cidr":               "10.10.0.0/16",
+		"azs":                []string{"us-east-1a"},
+		"nat_az_number":      1,
+		"environment":        vpc_name,
+		"replication_factor": 2,
+	}
+
+	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	t.Logf("Terraform module inputs: %+v", *terraformOptions)
+	// defer terraform.Destroy(t, terraformOptions)
+
+	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 21)
+
+	ValidateVPC(t, terraformOptions)
+
+	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
+
+	ValidateVPCRoute53ZoneID(t, terraformOptions)
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
+
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
+
+	ValidateVPCRoutingTables(t, terraformOptions)
+
+	ValidateVPCSubnets(t, terraformOptions)
+	ValidateDependId(t, terraformOptions)
+}
+
+func TestVPCApplyEnabledNoPublicSubdomain(t *testing.T) {
+	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
+
+	terraformModuleVars := map[string]interface{}{
+		"enable":             true,
+		"vpc_name":           vpc_name,
+		"subdomain":          "",
+		"cidr":               "10.11.0.0/16",
+		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
+		"nat_az_number":      1,
+		"environment":        vpc_name,
+		"replication_factor": 3,
+	}
+
+	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	t.Logf("Terraform module inputs: %+v", *terraformOptions)
+	// defer terraform.Destroy(t, terraformOptions)
+
+	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 24)
+
+	ValidateVPC(t, terraformOptions)
+
+	ValidateVPCDefaultSecurityGroup(t, terraformOptions)
+
+	ValidateVPCRoute53ZoneID(t, terraformOptions)
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
+
+	ValidateVPCRoute53ZoneName(t, terraformOptions)
+
+	ValidateVPCRoutingTables(t, terraformOptions)
+
+	ValidateVPCSubnets(t, terraformOptions)
+	ValidateDependId(t, terraformOptions)
+}
+
 func TestVPCApplyDisabled_Basic(t *testing.T) {
 	t.Parallel()
 
@@ -59,7 +171,7 @@ func TestVPCApplyDisabled_Basic(t *testing.T) {
 		"enable":             false,
 		"vpc_name":           vpc_name,
 		"subdomain":          "foo.bar.baz",
-		"cidr":               "10.10.0.0/16",
+		"cidr":               "10.12.0.0/16",
 		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
 		"nat_az_number":      1,
 		"environment":        vpc_name,
@@ -72,7 +184,6 @@ func TestVPCApplyDisabled_Basic(t *testing.T) {
 
 	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 0)
 }
-
 
 func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *terraform.Options {
 	testRunFolder, err := files.CopyTerraformFolderToTemp("../", t.Name())
@@ -120,8 +231,14 @@ func ValidateVPCRoute53ZoneID(t *testing.T, terraformOptions *terraform.Options)
 	assert.NotEqual(t, "", private_zone_id)
 	assert.Equal(t, net0ps_zone_id, private_zone_id)
 
-	assert.NotEqual(t, "", subdomain_zone_id)
-	assert.NotEqual(t, "", public_subdomain_zone_id)
+	publicSubdomainRegex := regexp.MustCompile("^[A-Za-z0-9,-_.\\s]+$")
+
+	if terraformOptions.Vars["subdomain"] == "" {
+		publicSubdomainRegex = regexp.MustCompile("^$")
+	}
+
+	assert.Regexp(t, publicSubdomainRegex, subdomain_zone_id)
+	assert.Regexp(t, publicSubdomainRegex, public_subdomain_zone_id)
 	assert.Equal(t, subdomain_zone_id, public_subdomain_zone_id)
 
 	assert.NotEqual(t, private_zone_id, public_subdomain_zone_id)
@@ -153,4 +270,3 @@ func TerraformApplyAndVerifyResourcesCreated(t *testing.T, terraformOptions *ter
 	terraform_apply_output := terraform.InitAndApply(t, terraformOptions)
 	assert.Contains(t, terraform_apply_output, fmt.Sprintf("Apply complete! Resources: %d added, 0 changed, 0 destroyed.", expectedNumberOfResourcesCreated))
 }
-
