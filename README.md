@@ -52,13 +52,13 @@ MIT Licensed. See [LICENSE](LICENSE) for full details.
 
 | Name | Description |
 |------|-------------|
-| depends\_id | n/a |
-| net0ps\_zone\_id | n/a |
-| private\_subnets | n/a |
-| public\_subnets | n/a |
-| subdomain\_zone\_id | n/a |
-| vpc\_default\_sg | n/a |
-| vpc\_id | n/a |
-| vpc\_private\_routing\_table\_id | n/a |
-| vpc\_public\_routing\_table\_id | n/a |
+| depends\_id | Dependency id |
+| net0ps\_zone\_id | Private hosted zone id |
+| private\_subnets | List of private subnets |
+| public\_subnets | List of public subnets |
+| subdomain\_zone\_id | Public hosted zone id |
+| vpc\_default\_sg | Default security group |
+| vpc\_id | VPC id |
+| vpc\_private\_routing\_table\_id | Private routing table id |
+| vpc\_public\_routing\_table\_id | Public routing table id |
 

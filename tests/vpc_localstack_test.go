@@ -24,113 +24,72 @@ func TestVPCApplyEnabledBasic(t *testing.T) {
 		"vpc_name":           vpc_name,
 		"subdomain":          "foo.bar.baz",
 		"cidr":               "10.10.0.0/16",
-		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
-		"nat_az_number":      1,
-		"environment":        vpc_name,
-		"replication_factor": 3,
+		"availability_zones": []string{"us-east-1a", "us-east-1b", "us-east-1c"},
+		"tags": map[string]string{
+			"Name": vpc_name,
+		},
+		"nat_gateway": map[string]string{
+			"behavior": "one_nat_per_vpc",
+		},
+		"enable_dns_support":               true,
+		"assign_generated_ipv6_cidr_block": true,
+		"private_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     0,
+		},
+		"public_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     100,
+		},
 	}
 
 	terraformOptions := SetupTestCase(t, terraformModuleVars)
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
-	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 25)
+	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 26)
 	ValidateTerraformModuleOutputs(t, terraformOptions)
 }
 
-func TestVPCApplyEnabledReplicationFactor(t *testing.T) {
+func TestVPCApplyDisabled(t *testing.T) {
 	t.Parallel()
 
 	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
-
-	terraformModuleVars := map[string]interface{}{
-		"enable":             true,
-		"vpc_name":           vpc_name,
-		"subdomain":          "foo.bar.baz",
-		"cidr":               "10.10.0.0/16",
-		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
-		"nat_az_number":      1,
-		"environment":        vpc_name,
-		"replication_factor": 2,
-	}
-
-	terraformOptions := SetupTestCase(t, terraformModuleVars)
-	t.Logf("Terraform module inputs: %+v", *terraformOptions)
-	// defer terraform.Destroy(t, terraformOptions)
-
-	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 21)
-	ValidateTerraformModuleOutputs(t, terraformOptions)
-}
-
-func TestVPCApplyEnabledSingleAvailabilityZone(t *testing.T) {
-	t.Parallel()
-
-	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
-
-	terraformModuleVars := map[string]interface{}{
-		"enable":             true,
-		"vpc_name":           vpc_name,
-		"subdomain":          "foo.bar.baz",
-		"cidr":               "10.10.0.0/16",
-		"azs":                []string{"us-east-1a"},
-		"nat_az_number":      1,
-		"environment":        vpc_name,
-		"replication_factor": 2,
-	}
-
-	terraformOptions := SetupTestCase(t, terraformModuleVars)
-	t.Logf("Terraform module inputs: %+v", *terraformOptions)
-	// defer terraform.Destroy(t, terraformOptions)
-
-	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 21)
-	ValidateTerraformModuleOutputs(t, terraformOptions)
-}
-
-func TestVPCApplyEnabledNoPublicSubdomain(t *testing.T) {
-	t.Parallel()
-
-	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
-
-	terraformModuleVars := map[string]interface{}{
-		"enable":             true,
-		"vpc_name":           vpc_name,
-		"subdomain":          "",
-		"cidr":               "10.11.0.0/16",
-		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
-		"nat_az_number":      1,
-		"environment":        vpc_name,
-		"replication_factor": 3,
-	}
-
-	terraformOptions := SetupTestCase(t, terraformModuleVars)
-	t.Logf("Terraform module inputs: %+v", *terraformOptions)
-	// defer terraform.Destroy(t, terraformOptions)
-
-	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 24)
-	ValidateTerraformModuleOutputs(t, terraformOptions)
-}
-
-func TestVPCApplyDisabled_Basic(t *testing.T) {
-	t.Parallel()
-
-	vpc_name := fmt.Sprintf("vpc_disabled-%s", random.UniqueId())
 
 	terraformModuleVars := map[string]interface{}{
 		"enable":             false,
 		"vpc_name":           vpc_name,
 		"subdomain":          "foo.bar.baz",
-		"cidr":               "10.12.0.0/16",
-		"azs":                []string{"us-east-1a", "us-east-1b", "us-east-1c"},
-		"nat_az_number":      1,
-		"environment":        vpc_name,
-		"replication_factor": 3,
+		"cidr":               "10.10.0.0/16",
+		"availability_zones": []string{"us-east-1a", "us-east-1b", "us-east-1c"},
+		"tags": map[string]string{
+			"Name": vpc_name,
+		},
+		"nat_gateway": map[string]string{
+			"behavior": "one_nat_per_vpc",
+		},
+		"enable_dns_support":               true,
+		"assign_generated_ipv6_cidr_block": true,
+		"private_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     0,
+		},
+		"public_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     100,
+		},
 	}
 
 	terraformOptions := SetupTestCase(t, terraformModuleVars)
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
-	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 0)
+	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 26)
+	ValidateTerraformModuleOutputs(t, terraformOptions)
 }
 
 func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *terraform.Options {

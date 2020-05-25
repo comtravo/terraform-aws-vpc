@@ -21,10 +21,11 @@ locals {
   default_tags = {
     environment = terraform.workspace
   }
+  enable_count = var.enable ? 1 : 0
 }
 
 resource "aws_vpc" "vpc" {
-  count                            = var.enable
+  count                            = local.enable_count
   cidr_block                       = var.cidr
   enable_dns_support               = var.enable_dns_support
   enable_dns_hostnames             = var.enable_dns_hostnames
@@ -40,7 +41,7 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "aws_route53_zone" "net0ps" {
-  count = var.enable
+  count = local.enable_count
   name  = "${var.vpc_name}-net0ps.com"
 
   vpc {
@@ -73,7 +74,7 @@ resource "aws_route53_zone" "subdomain" {
 
 # Internet gateway
 resource "aws_internet_gateway" "igw" {
-  count  = var.enable
+  count  = local.enable_count
   vpc_id = aws_vpc.vpc[0].id
 
   tags = merge(
@@ -101,7 +102,7 @@ locals {
 
 # Elastic IP for NAT
 resource "aws_eip" "nat" {
-  count = var.enable * local.nat_gateway_count * local.create_elastic_ips
+  count = local.enable_count * local.nat_gateway_count * local.create_elastic_ips
   vpc   = true
 
   tags = merge(
@@ -115,7 +116,7 @@ resource "aws_eip" "nat" {
 
 # NAT gateway
 resource "aws_nat_gateway" "nat" {
-  count = var.enable * local.nat_gateway_count
+  count = local.enable_count * local.nat_gateway_count
   allocation_id = element(
     concat(aws_eip.nat.*.id, var.external_elastic_ips),
     count.index,
@@ -137,7 +138,7 @@ resource "aws_nat_gateway" "nat" {
 }
 
 resource "aws_route_table" "private" {
-  count  = var.enable * local.nat_gateway_count
+  count  = local.enable_count * local.nat_gateway_count
   vpc_id = aws_vpc.vpc[0].id
 
   tags = merge(
@@ -151,7 +152,7 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route" "private" {
-  count                  = var.enable * local.nat_gateway_count
+  count                  = local.enable_count * local.nat_gateway_count
   route_table_id         = element(aws_route_table.private.*.id, count.index)
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.nat.*.id, count.index)
@@ -159,7 +160,7 @@ resource "aws_route" "private" {
 
 # Public routing table
 resource "aws_route_table" "public" {
-  count  = var.enable
+  count  = local.enable_count
   vpc_id = aws_vpc.vpc[0].id
 
   tags = merge(
@@ -173,7 +174,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route" "public-igw" {
-  count                  = var.enable
+  count                  = local.enable_count
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.igw[0].id
@@ -181,7 +182,7 @@ resource "aws_route" "public-igw" {
 
 # Subnets
 resource "aws_subnet" "public" {
-  count  = var.enable * var.public_subnets["number_of_subnets"]
+  count  = local.enable_count * var.public_subnets["number_of_subnets"]
   vpc_id = aws_vpc.vpc[0].id
   cidr_block = cidrsubnet(
     var.cidr,
@@ -202,7 +203,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  count  = var.enable * var.private_subnets["number_of_subnets"]
+  count  = local.enable_count * var.private_subnets["number_of_subnets"]
   vpc_id = aws_vpc.vpc[0].id
   cidr_block = cidrsubnet(
     var.cidr,
@@ -223,19 +224,19 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = var.enable * var.public_subnets["number_of_subnets"]
+  count          = local.enable_count * var.public_subnets["number_of_subnets"]
   subnet_id      = element(aws_subnet.public.*.id, count.index)
   route_table_id = aws_route_table.public[0].id
 }
 
 resource "aws_route_table_association" "private" {
-  count          = var.enable * var.private_subnets["number_of_subnets"]
+  count          = local.enable_count * var.private_subnets["number_of_subnets"]
   subnet_id      = element(aws_subnet.private.*.id, count.index)
   route_table_id = element(aws_route_table.private.*.id, count.index)
 }
 
 resource "aws_default_security_group" "vpc-default-sg" {
-  count  = var.enable
+  count  = local.enable_count
   vpc_id = aws_vpc.vpc[0].id
 
   ingress {
@@ -262,6 +263,7 @@ resource "aws_default_security_group" "vpc-default-sg" {
 }
 
 resource "null_resource" "dummy_dependency" {
+  count = local.enable_count
   depends_on = [
     aws_vpc.vpc,
     aws_route_table.public,
@@ -270,9 +272,9 @@ resource "null_resource" "dummy_dependency" {
 }
 
 resource "aws_default_network_acl" "acl" {
-  count                  = var.enable
+  count                  = local.enable_count
   default_network_acl_id = aws_vpc.vpc[0].default_network_acl_id
-  subnet_ids             = [aws_subnet.private.*.id, aws_subnet.public.*.id]
+  subnet_ids             = concat(aws_subnet.private.*.id, aws_subnet.public.*.id)
 
   ingress {
     protocol   = -1
@@ -303,7 +305,7 @@ resource "aws_default_network_acl" "acl" {
 
 # By default nothing is exposed to the Internet
 resource "aws_default_route_table" "private" {
-  count                  = var.enable
+  count                  = local.enable_count
   default_route_table_id = aws_vpc.vpc[0].default_route_table_id
 
   tags = merge(
