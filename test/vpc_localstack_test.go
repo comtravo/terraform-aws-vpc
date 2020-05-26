@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestVPCApplyEnabledBasic(t *testing.T) {
+func TestVPCApplyEnabled_basic(t *testing.T) {
 	t.Parallel()
 
 	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
@@ -49,10 +49,219 @@ func TestVPCApplyEnabledBasic(t *testing.T) {
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
-	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 26)
+	terraform.InitAndApply(t, terraformOptions)
 	ValidateTerraformModuleOutputs(t, terraformOptions)
 	ValidateNATGateways(t, terraformOptions, 1)
 	ValidateElasticIps(t, terraformOptions, 1)
+}
+
+func TestVPCApplyEnabled_twoAvailabilityZones(t *testing.T) {
+	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
+
+	terraformModuleVars := map[string]interface{}{
+		"enable":             true,
+		"vpc_name":           vpc_name,
+		"subdomain":          "foo.bar.baz",
+		"cidr":               "10.10.0.0/16",
+		"availability_zones": []string{"us-east-1a", "us-east-1b"},
+		"tags": map[string]string{
+			"Name": vpc_name,
+		},
+		"nat_gateway": map[string]string{
+			"behavior": "one_nat_per_vpc",
+		},
+		"enable_dns_support":               true,
+		"assign_generated_ipv6_cidr_block": true,
+		"private_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     0,
+		},
+		"public_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     100,
+		},
+	}
+
+	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	t.Logf("Terraform module inputs: %+v", *terraformOptions)
+	// defer terraform.Destroy(t, terraformOptions)
+
+	terraform.InitAndApply(t, terraformOptions)
+	ValidateTerraformModuleOutputs(t, terraformOptions)
+	ValidateNATGateways(t, terraformOptions, 1)
+	ValidateElasticIps(t, terraformOptions, 1)
+}
+
+func TestVPCApplyEnabled_differentSubnetConfigurations(t *testing.T) {
+	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
+
+	terraformModuleVars := map[string]interface{}{
+		"enable":             true,
+		"vpc_name":           vpc_name,
+		"subdomain":          "foo.bar.baz",
+		"cidr":               "10.10.0.0/16",
+		"availability_zones": []string{"us-east-1a", "us-east-1b"},
+		"tags": map[string]string{
+			"Name": vpc_name,
+		},
+		"nat_gateway": map[string]string{
+			"behavior": "one_nat_per_vpc",
+		},
+		"enable_dns_support":               true,
+		"assign_generated_ipv6_cidr_block": true,
+		"private_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     0,
+		},
+		"public_subnets": map[string]int{
+			"number_of_subnets": 1,
+			"newbits":           8,
+			"netnum_offset":     100,
+		},
+	}
+
+	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	t.Logf("Terraform module inputs: %+v", *terraformOptions)
+	// defer terraform.Destroy(t, terraformOptions)
+
+	terraform.InitAndApply(t, terraformOptions)
+
+	ValidateTerraformModuleOutputs(t, terraformOptions)
+	ValidateNATGateways(t, terraformOptions, 1)
+	ValidateElasticIps(t, terraformOptions, 1)
+}
+
+func TestVPCApplyEnabled_noPublicSubdomain(t *testing.T) {
+	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
+
+	terraformModuleVars := map[string]interface{}{
+		"enable":             true,
+		"vpc_name":           vpc_name,
+		"subdomain":          "",
+		"cidr":               "10.10.0.0/16",
+		"availability_zones": []string{"us-east-1a", "us-east-1b", "us-east-1c"},
+		"tags": map[string]string{
+			"Name": vpc_name,
+		},
+		"nat_gateway": map[string]string{
+			"behavior": "one_nat_per_vpc",
+		},
+		"enable_dns_support":               true,
+		"assign_generated_ipv6_cidr_block": true,
+		"private_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     0,
+		},
+		"public_subnets": map[string]int{
+			"number_of_subnets": 1,
+			"newbits":           8,
+			"netnum_offset":     100,
+		},
+	}
+
+	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	t.Logf("Terraform module inputs: %+v", *terraformOptions)
+	// defer terraform.Destroy(t, terraformOptions)
+
+	terraform.InitAndApply(t, terraformOptions)
+
+	ValidateTerraformModuleOutputs(t, terraformOptions)
+	ValidateNATGateways(t, terraformOptions, 1)
+	ValidateElasticIps(t, terraformOptions, 1)
+}
+
+func TestVPCApplyEnabled_natPerAZ(t *testing.T) {
+	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
+
+	terraformModuleVars := map[string]interface{}{
+		"enable":             true,
+		"vpc_name":           vpc_name,
+		"subdomain":          "",
+		"cidr":               "10.10.0.0/16",
+		"availability_zones": []string{"us-east-1a", "us-east-1b", "us-east-1c"},
+		"tags": map[string]string{
+			"Name": vpc_name,
+		},
+		"nat_gateway": map[string]string{
+			"behavior": "one_nat_per_availability_zone",
+		},
+		"enable_dns_support":               true,
+		"assign_generated_ipv6_cidr_block": true,
+		"private_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     0,
+		},
+		"public_subnets": map[string]int{
+			"number_of_subnets": 1,
+			"newbits":           8,
+			"netnum_offset":     100,
+		},
+	}
+
+	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	t.Logf("Terraform module inputs: %+v", *terraformOptions)
+	// defer terraform.Destroy(t, terraformOptions)
+
+	terraform.InitAndApply(t, terraformOptions)
+
+	ValidateTerraformModuleOutputs(t, terraformOptions)
+	ValidateNATGateways(t, terraformOptions, 3)
+	ValidateElasticIps(t, terraformOptions, 3)
+}
+
+func TestVPCApplyEnabled_natPerAZInTwoAZ(t *testing.T) {
+	t.Parallel()
+
+	vpc_name := fmt.Sprintf("vpc_enabled-%s", random.UniqueId())
+
+	terraformModuleVars := map[string]interface{}{
+		"enable":             true,
+		"vpc_name":           vpc_name,
+		"subdomain":          "",
+		"cidr":               "10.10.0.0/16",
+		"availability_zones": []string{"us-east-1a", "us-east-1b"},
+		"tags": map[string]string{
+			"Name": vpc_name,
+		},
+		"nat_gateway": map[string]string{
+			"behavior": "one_nat_per_availability_zone",
+		},
+		"enable_dns_support":               true,
+		"assign_generated_ipv6_cidr_block": true,
+		"private_subnets": map[string]int{
+			"number_of_subnets": 3,
+			"newbits":           8,
+			"netnum_offset":     0,
+		},
+		"public_subnets": map[string]int{
+			"number_of_subnets": 1,
+			"newbits":           8,
+			"netnum_offset":     100,
+		},
+	}
+
+	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	t.Logf("Terraform module inputs: %+v", *terraformOptions)
+	// defer terraform.Destroy(t, terraformOptions)
+
+	terraform.InitAndApply(t, terraformOptions)
+
+	ValidateTerraformModuleOutputs(t, terraformOptions)
+	ValidateNATGateways(t, terraformOptions, 2)
+	ValidateElasticIps(t, terraformOptions, 2)
 }
 
 func TestVPCApplyDisabled(t *testing.T) {
@@ -90,7 +299,8 @@ func TestVPCApplyDisabled(t *testing.T) {
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
-	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 0)
+	terraformApplyOutput := terraform.InitAndApply(t, terraformOptions)
+	assert.Contains(t, terraformApplyOutput, "Apply complete! Resources: 0 added, 0 changed, 0 destroyed.")
 }
 
 func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *terraform.Options {
@@ -206,9 +416,4 @@ func ValidateVPCRoutingTables(t *testing.T, terraformOptions *terraform.Options)
 func ValidateDependId(t *testing.T, terraformOptions *terraform.Options) {
 	depends_id := terraform.Output(t, terraformOptions, "depends_id")
 	assert.NotEqual(t, "", depends_id)
-}
-
-func TerraformApplyAndVerifyResourcesCreated(t *testing.T, terraformOptions *terraform.Options, expectedNumberOfResourcesCreated int) {
-	terraform_apply_output := terraform.InitAndApply(t, terraformOptions)
-	assert.Contains(t, terraform_apply_output, fmt.Sprintf("Apply complete! Resources: %d added, 0 changed, 0 destroyed.", expectedNumberOfResourcesCreated))
 }

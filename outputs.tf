@@ -5,7 +5,7 @@ locals {
     vpc_id                       = var.enable ? aws_vpc.vpc[0].id : ""
     vpc_default_sg               = var.enable ? aws_default_security_group.vpc-default-sg[0].id : ""
     net0ps_zone_id               = var.enable ? aws_route53_zone.net0ps[0].zone_id : ""
-    subdomain_zone_id            = var.enable ? aws_route53_zone.subdomain[0].zone_id : ""
+    subdomain_zone_id            = var.enable && var.subdomain != "" ? aws_route53_zone.subdomain[0].zone_id : ""
     vpc_private_routing_table_id = var.enable ? aws_route_table.private[0].id : ""
     vpc_public_routing_table_id  = var.enable ? aws_route_table.public[0].id : ""
     private_subdomain            = var.enable ? aws_route53_zone.net0ps[0].name : ""
