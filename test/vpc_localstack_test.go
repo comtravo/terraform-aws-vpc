@@ -88,8 +88,7 @@ func TestVPCApplyDisabled(t *testing.T) {
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
-	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 26)
-	ValidateTerraformModuleOutputs(t, terraformOptions)
+	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 0)
 }
 
 func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *terraform.Options {
@@ -122,6 +121,12 @@ func ValidateTerraformModuleOutputs(t *testing.T, terraformOptions *terraform.Op
 	ValidateDependId(t, terraformOptions)
 }
 
+func ValidateEachElementInArray(t *testing.T, array []string, regularExpression string) {
+	for _, element := range array {
+		assert.Regexp(t, regularExpression, element)
+	}
+}
+
 func ValidateVPCSubnets(t *testing.T, terraformOptions *terraform.Options) {
 	private_subnets := terraform.OutputList(t, terraformOptions, "private_subnets")
 	public_subnets := terraform.OutputList(t, terraformOptions, "public_subnets")
@@ -129,6 +134,8 @@ func ValidateVPCSubnets(t *testing.T, terraformOptions *terraform.Options) {
 	assert.Len(t, private_subnets, terraformOptions.Vars["private_subnets"].(map[string]int)["number_of_subnets"])
 	assert.Len(t, public_subnets, terraformOptions.Vars["public_subnets"].(map[string]int)["number_of_subnets"])
 	assert.NotEqual(t, public_subnets, private_subnets)
+	ValidateEachElementInArray(t, private_subnets, "subnet-*")
+	ValidateEachElementInArray(t, public_subnets, "subnet-*")
 }
 
 func ValidateVPC(t *testing.T, terraformOptions *terraform.Options) {

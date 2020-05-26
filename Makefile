@@ -18,7 +18,7 @@ build:
 	@$(DOCKER_COMPOSE) build
 
 test-localstack:
-	@cd tests && go test -v -tags=localstack
+	@cd test && go test -v -tags=localstack
 
 test-all: test-localstack
 
@@ -43,3 +43,5 @@ clean-all: clean-state
 
 logs:
 	@$(DOCKER_COMPOSE) logs -f
+
+.PHONY: test
