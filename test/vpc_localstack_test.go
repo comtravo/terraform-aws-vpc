@@ -309,7 +309,7 @@ func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *te
 	t.Logf("Copied files to test folder: %s", testRunFolder)
 
 	localstackCongigDestination := path.Join(testRunFolder, "localstack.tf")
-	files.CopyFile("localstack.tf", localstackCongigDestination)
+	files.CopyFile("fixtures/localstack.tf", localstackCongigDestination)
 	t.Logf("Copied localstack file to: %s", localstackCongigDestination)
 
 	terraformOptions := &terraform.Options{
