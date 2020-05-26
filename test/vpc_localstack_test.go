@@ -300,7 +300,10 @@ func TestVPCApplyDisabled(t *testing.T) {
 	// defer terraform.Destroy(t, terraformOptions)
 
 	terraformApplyOutput := terraform.InitAndApply(t, terraformOptions)
-	assert.Contains(t, terraformApplyOutput, "Apply complete! Resources: 0 added, 0 changed, 0 destroyed.")
+	resourceCount := terraform.GetResourceCount(t, terraformApplyOutput)
+	assert.Equal(t, resourceCount.Add, 0)
+	assert.Equal(t, resourceCount.Change, 0)
+	assert.Equal(t, resourceCount.Destroy, 0)
 }
 
 func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *terraform.Options {
