@@ -297,24 +297,9 @@ func TestVPCApplyEnabled_externalElasticIPsNatPerAZ(t *testing.T) {
 	}
 
 	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	SetupExternalElasticIPs(t, terraformOptions)
+	assert.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
 
-	externalElasticIPsFileDestination := path.Join(terraformOptions.TerraformDir, "eip.tf")
-	files.CopyFile("fixtures/eip.tf", externalElasticIPsFileDestination)
-	t.Logf("Copied eip file to: %s", externalElasticIPsFileDestination)
-
-	terraformOptions.Targets = []string{"aws_eip.external"}
-	t.Logf("Terraform module inputs for Elastic IPs: %+v", *terraformOptions)
-	terraformApplyOutput := terraform.InitAndApply(t, terraformOptions)
-	resourceCount := terraform.GetResourceCount(t, terraformApplyOutput)
-	external_elastic_ips := terraform.OutputList(t, terraformOptions, "external_elastic_ips")
-	assert.Equal(t, resourceCount.Add, 5)
-	assert.Equal(t, resourceCount.Change, 0)
-	assert.Equal(t, resourceCount.Destroy, 0)
-	assert.Len(t, external_elastic_ips, 5)
-	t.Logf("External elastic IPs created: %s", external_elastic_ips)
-
-	terraformOptions.Targets = []string{}
-	terraformOptions.Vars["external_elastic_ips"] = external_elastic_ips
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
@@ -323,6 +308,7 @@ func TestVPCApplyEnabled_externalElasticIPsNatPerAZ(t *testing.T) {
 	ValidateTerraformModuleOutputs(t, terraformOptions)
 	ValidateNATGateways(t, terraformOptions, 3)
 	ValidateElasticIps(t, terraformOptions, 5)
+	ValidateExternalElasticIPs(t, terraformOptions)
 }
 
 func TestVPCApplyEnabled_externalElasticIPsLessThanDesiredNATCount(t *testing.T) {
@@ -358,24 +344,9 @@ func TestVPCApplyEnabled_externalElasticIPsLessThanDesiredNATCount(t *testing.T)
 	}
 
 	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	SetupExternalElasticIPs(t, terraformOptions)
+	assert.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
 
-	externalElasticIPsFileDestination := path.Join(terraformOptions.TerraformDir, "eip.tf")
-	files.CopyFile("fixtures/eip.tf", externalElasticIPsFileDestination)
-	t.Logf("Copied eip file to: %s", externalElasticIPsFileDestination)
-
-	terraformOptions.Targets = []string{"aws_eip.external"}
-	t.Logf("Terraform module inputs for Elastic IPs: %+v", *terraformOptions)
-	terraformApplyOutput := terraform.InitAndApply(t, terraformOptions)
-	resourceCount := terraform.GetResourceCount(t, terraformApplyOutput)
-	external_elastic_ips := terraform.OutputList(t, terraformOptions, "external_elastic_ips")
-	assert.Equal(t, resourceCount.Add, 1)
-	assert.Equal(t, resourceCount.Change, 0)
-	assert.Equal(t, resourceCount.Destroy, 0)
-	assert.Len(t, external_elastic_ips, 1)
-	t.Logf("External elastic IPs created: %s", external_elastic_ips)
-
-	terraformOptions.Targets = []string{}
-	terraformOptions.Vars["external_elastic_ips"] = external_elastic_ips
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
@@ -384,6 +355,7 @@ func TestVPCApplyEnabled_externalElasticIPsLessThanDesiredNATCount(t *testing.T)
 	ValidateTerraformModuleOutputs(t, terraformOptions)
 	ValidateNATGateways(t, terraformOptions, 1)
 	ValidateElasticIps(t, terraformOptions, 1)
+	ValidateExternalElasticIPs(t, terraformOptions)
 }
 
 func TestVPCApplyEnabled_externalElasticIPsSingleNAT(t *testing.T) {
@@ -419,24 +391,9 @@ func TestVPCApplyEnabled_externalElasticIPsSingleNAT(t *testing.T) {
 	}
 
 	terraformOptions := SetupTestCase(t, terraformModuleVars)
+	SetupExternalElasticIPs(t, terraformOptions)
+	assert.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
 
-	externalElasticIPsFileDestination := path.Join(terraformOptions.TerraformDir, "eip.tf")
-	files.CopyFile("fixtures/eip.tf", externalElasticIPsFileDestination)
-	t.Logf("Copied eip file to: %s", externalElasticIPsFileDestination)
-
-	terraformOptions.Targets = []string{"aws_eip.external"}
-	t.Logf("Terraform module inputs for Elastic IPs: %+v", *terraformOptions)
-	terraformApplyOutput := terraform.InitAndApply(t, terraformOptions)
-	resourceCount := terraform.GetResourceCount(t, terraformApplyOutput)
-	external_elastic_ips := terraform.OutputList(t, terraformOptions, "external_elastic_ips")
-	assert.Equal(t, resourceCount.Add, 5)
-	assert.Equal(t, resourceCount.Change, 0)
-	assert.Equal(t, resourceCount.Destroy, 0)
-	assert.Len(t, external_elastic_ips, 5)
-	t.Logf("External elastic IPs created: %s", external_elastic_ips)
-
-	terraformOptions.Targets = []string{}
-	terraformOptions.Vars["external_elastic_ips"] = external_elastic_ips
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
 
@@ -445,6 +402,7 @@ func TestVPCApplyEnabled_externalElasticIPsSingleNAT(t *testing.T) {
 	ValidateTerraformModuleOutputs(t, terraformOptions)
 	ValidateNATGateways(t, terraformOptions, 1)
 	ValidateElasticIps(t, terraformOptions, 5)
+	ValidateExternalElasticIPs(t, terraformOptions)
 }
 
 func TestVPCApplyDisabled(t *testing.T) {
@@ -503,6 +461,26 @@ func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *te
 		Vars:         terraformModuleVars,
 	}
 	return terraformOptions
+}
+
+func SetupExternalElasticIPs(t *testing.T, terraformOptions *terraform.Options) {
+	externalElasticIPsFileDestination := path.Join(terraformOptions.TerraformDir, "eip.tf")
+	files.CopyFile("fixtures/eip.tf", externalElasticIPsFileDestination)
+	t.Logf("Copied eip file to: %s", externalElasticIPsFileDestination)
+
+	terraformOptions.Targets = []string{"aws_eip.external"}
+	t.Logf("Terraform module inputs for Elastic IPs: %+v", *terraformOptions)
+	terraformApplyOutput := terraform.InitAndApply(t, terraformOptions)
+	resourceCount := terraform.GetResourceCount(t, terraformApplyOutput)
+	external_elastic_ips := terraform.OutputList(t, terraformOptions, "external_elastic_ips")
+	assert.Equal(t, resourceCount.Add, 5)
+	assert.Equal(t, resourceCount.Change, 0)
+	assert.Equal(t, resourceCount.Destroy, 0)
+	assert.Len(t, external_elastic_ips, 5)
+	t.Logf("External elastic IPs created: %s", external_elastic_ips)
+
+	terraformOptions.Targets = []string{}
+	terraformOptions.Vars["external_elastic_ips"] = external_elastic_ips
 }
 
 func ValidateTerraformModuleOutputs(t *testing.T, terraformOptions *terraform.Options) {
@@ -602,4 +580,10 @@ func ValidateVPCRoutingTables(t *testing.T, terraformOptions *terraform.Options)
 func ValidateDependId(t *testing.T, terraformOptions *terraform.Options) {
 	depends_id := terraform.Output(t, terraformOptions, "depends_id")
 	assert.NotEqual(t, "", depends_id)
+}
+
+func ValidateExternalElasticIPs(t *testing.T, terraformOptions *terraform.Options) {
+	external_elastic_ips := terraform.Output(t, terraformOptions, "external_elastic_ips")
+	elastic_ips := terraform.Output(t, terraformOptions, "elastic_ips")
+	assert.Equal(t, external_elastic_ips, elastic_ips)
 }
