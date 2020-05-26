@@ -11,7 +11,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestVPCApplyEnabled_basic(t *testing.T) {
@@ -298,7 +298,7 @@ func TestVPCApplyEnabled_externalElasticIPsNatPerAZ(t *testing.T) {
 
 	terraformOptions := SetupTestCase(t, terraformModuleVars)
 	SetupExternalElasticIPs(t, terraformOptions)
-	assert.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
+	require.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
 
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
@@ -345,7 +345,7 @@ func TestVPCApplyEnabled_externalElasticIPsLessThanDesiredNATCount(t *testing.T)
 
 	terraformOptions := SetupTestCase(t, terraformModuleVars)
 	SetupExternalElasticIPs(t, terraformOptions)
-	assert.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
+	require.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
 
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
@@ -392,7 +392,7 @@ func TestVPCApplyEnabled_externalElasticIPsSingleNAT(t *testing.T) {
 
 	terraformOptions := SetupTestCase(t, terraformModuleVars)
 	SetupExternalElasticIPs(t, terraformOptions)
-	assert.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
+	require.Len(t, terraformOptions.Vars["external_elastic_ips"], terraformOptions.Vars["external_eip_count"].(int))
 
 	t.Logf("Terraform module inputs: %+v", *terraformOptions)
 	// defer terraform.Destroy(t, terraformOptions)
@@ -442,14 +442,14 @@ func TestVPCApplyDisabled(t *testing.T) {
 
 	terraformApplyOutput := terraform.InitAndApply(t, terraformOptions)
 	resourceCount := terraform.GetResourceCount(t, terraformApplyOutput)
-	assert.Equal(t, resourceCount.Add, 0)
-	assert.Equal(t, resourceCount.Change, 0)
-	assert.Equal(t, resourceCount.Destroy, 0)
+	require.Equal(t, resourceCount.Add, 0)
+	require.Equal(t, resourceCount.Change, 0)
+	require.Equal(t, resourceCount.Destroy, 0)
 }
 
 func SetupTestCase(t *testing.T, terraformModuleVars map[string]interface{}) *terraform.Options {
 	testRunFolder, err := files.CopyTerraformFolderToTemp("../", t.Name())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	t.Logf("Copied files to test folder: %s", testRunFolder)
 
 	localstackConfigDestination := path.Join(testRunFolder, "localstack.tf")
@@ -473,10 +473,14 @@ func SetupExternalElasticIPs(t *testing.T, terraformOptions *terraform.Options) 
 	terraformApplyOutput := terraform.InitAndApply(t, terraformOptions)
 	resourceCount := terraform.GetResourceCount(t, terraformApplyOutput)
 	external_elastic_ips := terraform.OutputList(t, terraformOptions, "external_elastic_ips")
-	assert.Equal(t, resourceCount.Add, 5)
-	assert.Equal(t, resourceCount.Change, 0)
-	assert.Equal(t, resourceCount.Destroy, 0)
-	assert.Len(t, external_elastic_ips, 5)
+
+	exptected_external_eip_count := terraformOptions.Vars["external_eip_count"].(int)
+
+	require.Equal(t, resourceCount.Add, exptected_external_eip_count)
+	require.Equal(t, resourceCount.Change, 0)
+	require.Equal(t, resourceCount.Destroy, 0)
+	require.Len(t, external_elastic_ips, exptected_external_eip_count)
+
 	t.Logf("External elastic IPs created: %s", external_elastic_ips)
 
 	terraformOptions.Targets = []string{}
@@ -499,19 +503,19 @@ func ValidateTerraformModuleOutputs(t *testing.T, terraformOptions *terraform.Op
 
 func ValidateNATGateways(t *testing.T, terraformOptions *terraform.Options, expectedNumberOfResources int) {
 	nat_gateway_ids := terraform.OutputList(t, terraformOptions, "nat_gateway_ids")
-	assert.Len(t, nat_gateway_ids, expectedNumberOfResources)
+	require.Len(t, nat_gateway_ids, expectedNumberOfResources)
 	ValidateEachElementInArray(t, nat_gateway_ids, "nat-*")
 }
 
 func ValidateElasticIps(t *testing.T, terraformOptions *terraform.Options, expectedNumberOfResources int) {
 	elastic_ips := terraform.OutputList(t, terraformOptions, "elastic_ips")
-	assert.Len(t, elastic_ips, expectedNumberOfResources)
+	require.Len(t, elastic_ips, expectedNumberOfResources)
 	ValidateEachElementInArray(t, elastic_ips, "eip-*")
 }
 
 func ValidateEachElementInArray(t *testing.T, array []string, regularExpression string) {
 	for _, element := range array {
-		assert.Regexp(t, regularExpression, element)
+		require.Regexp(t, regularExpression, element)
 	}
 }
 
@@ -519,21 +523,21 @@ func ValidateVPCSubnets(t *testing.T, terraformOptions *terraform.Options) {
 	private_subnets := terraform.OutputList(t, terraformOptions, "private_subnets")
 	public_subnets := terraform.OutputList(t, terraformOptions, "public_subnets")
 
-	assert.Len(t, private_subnets, terraformOptions.Vars["private_subnets"].(map[string]int)["number_of_subnets"])
-	assert.Len(t, public_subnets, terraformOptions.Vars["public_subnets"].(map[string]int)["number_of_subnets"])
-	assert.NotEqual(t, public_subnets, private_subnets)
+	require.Len(t, private_subnets, terraformOptions.Vars["private_subnets"].(map[string]int)["number_of_subnets"])
+	require.Len(t, public_subnets, terraformOptions.Vars["public_subnets"].(map[string]int)["number_of_subnets"])
+	require.NotEqual(t, public_subnets, private_subnets)
 	ValidateEachElementInArray(t, private_subnets, "subnet-*")
 	ValidateEachElementInArray(t, public_subnets, "subnet-*")
 }
 
 func ValidateVPC(t *testing.T, terraformOptions *terraform.Options) {
 	vpc_id := terraform.Output(t, terraformOptions, "vpc_id")
-	assert.Regexp(t, "vpc-*", vpc_id)
+	require.Regexp(t, "vpc-*", vpc_id)
 }
 
 func ValidateVPCDefaultSecurityGroup(t *testing.T, terraformOptions *terraform.Options) {
 	vpc_default_sg := terraform.Output(t, terraformOptions, "vpc_default_sg")
-	assert.Regexp(t, "sg-*", vpc_default_sg)
+	require.Regexp(t, "sg-*", vpc_default_sg)
 }
 
 func ValidateVPCRoute53ZoneID(t *testing.T, terraformOptions *terraform.Options) {
@@ -543,9 +547,9 @@ func ValidateVPCRoute53ZoneID(t *testing.T, terraformOptions *terraform.Options)
 	subdomain_zone_id := terraform.Output(t, terraformOptions, "subdomain_zone_id")
 	public_subdomain_zone_id := terraform.Output(t, terraformOptions, "public_subdomain_zone_id")
 
-	assert.NotEqual(t, "", net0ps_zone_id)
-	assert.NotEqual(t, "", private_zone_id)
-	assert.Equal(t, net0ps_zone_id, private_zone_id)
+	require.NotEqual(t, "", net0ps_zone_id)
+	require.NotEqual(t, "", private_zone_id)
+	require.Equal(t, net0ps_zone_id, private_zone_id)
 
 	publicSubdomainRegex := regexp.MustCompile("^[A-Za-z0-9,-_.\\s]+$")
 
@@ -553,37 +557,37 @@ func ValidateVPCRoute53ZoneID(t *testing.T, terraformOptions *terraform.Options)
 		publicSubdomainRegex = regexp.MustCompile("^$")
 	}
 
-	assert.Regexp(t, publicSubdomainRegex, subdomain_zone_id)
-	assert.Regexp(t, publicSubdomainRegex, public_subdomain_zone_id)
-	assert.Equal(t, subdomain_zone_id, public_subdomain_zone_id)
+	require.Regexp(t, publicSubdomainRegex, subdomain_zone_id)
+	require.Regexp(t, publicSubdomainRegex, public_subdomain_zone_id)
+	require.Equal(t, subdomain_zone_id, public_subdomain_zone_id)
 
-	assert.NotEqual(t, private_zone_id, public_subdomain_zone_id)
+	require.NotEqual(t, private_zone_id, public_subdomain_zone_id)
 }
 
 func ValidateVPCRoute53ZoneName(t *testing.T, terraformOptions *terraform.Options) {
 	public_subdomain := terraform.Output(t, terraformOptions, "public_subdomain")
 	private_subdomain := terraform.Output(t, terraformOptions, "private_subdomain")
 
-	assert.Equal(t, terraformOptions.Vars["subdomain"], public_subdomain)
-	assert.Equal(t, fmt.Sprintf("%s-net0ps.com.", terraformOptions.Vars["vpc_name"]), private_subdomain)
+	require.Equal(t, terraformOptions.Vars["subdomain"], public_subdomain)
+	require.Equal(t, fmt.Sprintf("%s-net0ps.com.", terraformOptions.Vars["vpc_name"]), private_subdomain)
 }
 
 func ValidateVPCRoutingTables(t *testing.T, terraformOptions *terraform.Options) {
 	vpc_private_routing_table_id := terraform.Output(t, terraformOptions, "vpc_private_routing_table_id")
 	vpc_public_routing_table_id := terraform.Output(t, terraformOptions, "vpc_public_routing_table_id")
 
-	assert.Regexp(t, "rtb-*", vpc_private_routing_table_id)
-	assert.Regexp(t, "rtb-*", vpc_public_routing_table_id)
-	assert.NotEqual(t, vpc_private_routing_table_id, vpc_public_routing_table_id)
+	require.Regexp(t, "rtb-*", vpc_private_routing_table_id)
+	require.Regexp(t, "rtb-*", vpc_public_routing_table_id)
+	require.NotEqual(t, vpc_private_routing_table_id, vpc_public_routing_table_id)
 }
 
 func ValidateDependId(t *testing.T, terraformOptions *terraform.Options) {
 	depends_id := terraform.Output(t, terraformOptions, "depends_id")
-	assert.NotEqual(t, "", depends_id)
+	require.NotEqual(t, "", depends_id)
 }
 
 func ValidateExternalElasticIPs(t *testing.T, terraformOptions *terraform.Options) {
 	external_elastic_ips := terraform.Output(t, terraformOptions, "external_elastic_ips")
 	elastic_ips := terraform.Output(t, terraformOptions, "elastic_ips")
-	assert.Equal(t, external_elastic_ips, elastic_ips)
+	require.Equal(t, external_elastic_ips, elastic_ips)
 }

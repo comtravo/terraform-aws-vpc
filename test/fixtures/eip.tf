@@ -1,5 +1,5 @@
 variable "external_eip_count" {
-  type = number
+  type    = number
   default = 5
 }
 
