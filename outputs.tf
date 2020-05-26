@@ -11,7 +11,7 @@ locals {
     private_subdomain            = var.enable ? aws_route53_zone.net0ps[0].name : ""
     depends_id                   = var.enable ? null_resource.dummy_dependency[0].id : ""
     nat_gateway_ids              = var.enable ? aws_nat_gateway.nat.*.id : []
-    elastic_ips = var.enable && length(var.external_elastic_ips) > 0 ? var.external_elastic_ips : var.enable ? aws_eip.nat.*.id : []
+    elastic_ips                  = var.enable && length(var.external_elastic_ips) > 0 ? var.external_elastic_ips : var.enable ? aws_eip.nat.*.id : []
   }
 }
 

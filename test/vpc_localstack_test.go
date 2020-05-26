@@ -51,6 +51,8 @@ func TestVPCApplyEnabledBasic(t *testing.T) {
 
 	TerraformApplyAndVerifyResourcesCreated(t, terraformOptions, 26)
 	ValidateTerraformModuleOutputs(t, terraformOptions)
+	ValidateNATGateways(t, terraformOptions, 1)
+	ValidateElasticIps(t, terraformOptions, 1)
 }
 
 func TestVPCApplyDisabled(t *testing.T) {
@@ -119,6 +121,18 @@ func ValidateTerraformModuleOutputs(t *testing.T, terraformOptions *terraform.Op
 
 	ValidateVPCSubnets(t, terraformOptions)
 	ValidateDependId(t, terraformOptions)
+}
+
+func ValidateNATGateways(t *testing.T, terraformOptions *terraform.Options, expectedNumberOfResources int) {
+	nat_gateway_ids := terraform.OutputList(t, terraformOptions, "nat_gateway_ids")
+	assert.Len(t, nat_gateway_ids, expectedNumberOfResources)
+	ValidateEachElementInArray(t, nat_gateway_ids, "nat-*")
+}
+
+func ValidateElasticIps(t *testing.T, terraformOptions *terraform.Options, expectedNumberOfResources int) {
+	elastic_ips := terraform.OutputList(t, terraformOptions, "elastic_ips")
+	assert.Len(t, elastic_ips, expectedNumberOfResources)
+	ValidateEachElementInArray(t, elastic_ips, "eip-*")
 }
 
 func ValidateEachElementInArray(t *testing.T, array []string, regularExpression string) {
