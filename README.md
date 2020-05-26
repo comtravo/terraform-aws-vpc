@@ -5,7 +5,7 @@
 This module creates a AWS VPC and all the resources related to it.  
 This module is used to create VPCs in your AWS account. It is a complete rewrite of our internal Terraform AWS VPC module. see branch (1.x).
 
-\*## Current features
+## Current features
 \*\*Conditionally enable / disable VPC creation.\*\* It is helpful when for example you want to conditionally create multiple VPCs in a single environment for reasons such as VPC peering.  
 This module helps **create explicit dependencies between VPCs and VPC peering** so that there is no race condition between VPC creation and VPC peering.
 \*\*Create a private Route 53 hosted zone\*\*.
