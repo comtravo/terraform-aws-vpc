@@ -1,5 +1,10 @@
+variable "external_eip_count" {
+  type = number
+  default = 5
+}
+
 resource "aws_eip" "external" {
-  count = 5
+  count = var.external_eip_count
   vpc   = true
 }
 
