@@ -29,9 +29,11 @@ variable azs {
 }
 
 variable private_subnet_tags {
+  type    = "map"
   default = {}
 }
 
 variable public_subnet_tags {
+  type    = "map"
   default = {}
 }
