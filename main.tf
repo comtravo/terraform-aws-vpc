@@ -136,6 +136,20 @@ resource "aws_route" "public-igw" {
   gateway_id             = "${aws_internet_gateway.igw.id}"
 }
 
+locals {
+  private_subnet_tags = "${merge(var.private_subnet_tags, {
+    Name        = "${var.vpc_name}-private-subnet"
+    environment = "${var.environment}"
+    az          = "${element(var.azs, count.index)}"
+  })}"
+
+  public_subnet_tags = "${merge(var.public_subnet_tags, {
+    Name        = "${var.vpc_name}-public-subnet"
+    environment = "${var.environment}"
+    az          = "${element(var.azs, count.index)}"
+  })}"
+}
+
 # Subnets
 resource "aws_subnet" "public" {
   count                   = "${var.enable * var.replication_factor}"
@@ -144,11 +158,7 @@ resource "aws_subnet" "public" {
   availability_zone       = "${element(var.azs, count.index)}"
   map_public_ip_on_launch = true
 
-  tags {
-    Name        = "${var.vpc_name}-public-subnet"
-    environment = "${var.environment}"
-    az          = "${element(var.azs, count.index)}"
-  }
+  tags = "${local.public_subnet_tags}"
 }
 
 resource "aws_subnet" "private" {
@@ -158,11 +168,7 @@ resource "aws_subnet" "private" {
   availability_zone       = "${element(var.azs, count.index)}"
   map_public_ip_on_launch = false
 
-  tags {
-    Name        = "${var.vpc_name}-private-subnet"
-    environment = "${var.environment}"
-    az          = "${element(var.azs, count.index)}"
-  }
+  tags = "${local.private_subnet_tags}"
 }
 
 resource "aws_route_table_association" "public" {

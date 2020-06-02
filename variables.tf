@@ -27,3 +27,11 @@ variable enable_dns_hostnames {
 variable azs {
   type = "list"
 }
+
+variable private_subnet_tags {
+  default = {}
+}
+
+variable public_subnet_tags {
+  default = {}
+}
