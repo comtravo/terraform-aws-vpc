@@ -144,11 +144,16 @@ resource "aws_subnet" "public" {
   availability_zone       = "${element(var.azs, count.index)}"
   map_public_ip_on_launch = true
 
-  tags = "${merge(var.public_subnet_tags, {
-    Name        = "${var.vpc_name}-public-subnet"
-    environment = "${var.environment}"
-    az          = "${element(var.azs, count.index)}"
-  })}"
+  tags = "${
+    merge(
+      var.public_subnet_tags,
+      map(
+        "Name"       , "${var.vpc_name}-public-subnet",
+        "environment", "${var.environment}",
+        "az"         , "${element(var.azs, count.index)}",
+      )
+    )
+  }"
 }
 
 resource "aws_subnet" "private" {
@@ -158,11 +163,16 @@ resource "aws_subnet" "private" {
   availability_zone       = "${element(var.azs, count.index)}"
   map_public_ip_on_launch = false
 
-  tags = "${merge(var.private_subnet_tags, {
-    Name        = "${var.vpc_name}-private-subnet"
-    environment = "${var.environment}"
-    az          = "${element(var.azs, count.index)}"
-  })}"
+  tags = "${
+    merge(
+      var.private_subnet_tags,
+      map(
+        "Name"       , "${var.vpc_name}-private-subnet",
+        "environment", "${var.environment}",
+        "az"         , "${element(var.azs, count.index)}",
+      )
+    )
+  }"
 }
 
 resource "aws_route_table_association" "public" {
