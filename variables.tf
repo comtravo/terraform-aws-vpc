@@ -37,3 +37,8 @@ variable public_subnet_tags {
   type    = "map"
   default = {}
 }
+
+variable tags {
+  type    = "map"
+  default = {}
+}

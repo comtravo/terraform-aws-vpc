@@ -4,11 +4,16 @@ resource "aws_vpc" "vpc" {
   enable_dns_support   = "${var.enable_dns_support}"
   enable_dns_hostnames = "${var.enable_dns_hostnames}"
 
-  tags {
-    Name        = "${var.vpc_name}-vpc"
-    environment = "${var.environment}"
-    depends_id  = "${var.depends_id}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-vpc",
+        "environment", "${var.environment}",
+        "depends_id", "${var.depends_id}",
+      )
+    )
+  }"
 }
 
 resource "aws_route53_zone" "net0ps" {
@@ -21,10 +26,15 @@ resource "aws_route53_zone" "net0ps" {
 
   comment = "Private hosted zone for ${var.environment}"
 
-  tags {
-    Name        = "${var.vpc_name}-private-zone"
-    environment = "${var.environment}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-private-zone",
+        "environment", "${var.environment}"
+      )
+    )
+  }"
 }
 
 resource "aws_route53_zone" "subdomain" {
@@ -32,10 +42,15 @@ resource "aws_route53_zone" "subdomain" {
   name    = "${var.subdomain}"
   comment = "Public hosted zone for ${var.environment} subdomain"
 
-  tags {
-    Name        = "${var.vpc_name}-public-zone"
-    environment = "${var.environment}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-public-zone",
+        "environment", "${var.environment}"
+      )
+    )
+  }"
 }
 
 # Internet gateway
@@ -43,10 +58,15 @@ resource "aws_internet_gateway" "igw" {
   count  = "${var.enable}"
   vpc_id = "${aws_vpc.vpc.id}"
 
-  tags {
-    Name        = "${var.vpc_name}-igw"
-    environment = "${var.environment}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-igw",
+        "environment", "${var.environment}"
+      )
+    )
+  }"
 }
 
 # NAT gateway
@@ -57,10 +77,15 @@ resource "aws_nat_gateway" "nat" {
 
   depends_on = ["aws_internet_gateway.igw", "aws_eip.nat"]
 
-  tags {
-    Name        = "${var.vpc_name}-nat-gateway"
-    environment = "${var.environment}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-nat-gateway",
+        "environment", "${var.environment}"
+      )
+    )
+  }"
 }
 
 # Elastic IP for NAT
@@ -92,21 +117,30 @@ resource "aws_default_network_acl" "acl" {
     to_port    = 0
   }
 
-  tags {
-    Name        = "${var.vpc_name}-acl"
-    environment = "${var.environment}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-acl",
+        "environment", "${var.environment}"
+      )
+    )
+  }"
 }
 
 resource "aws_default_route_table" "private" {
   count                  = "${var.enable}"
   default_route_table_id = "${aws_vpc.vpc.default_route_table_id}"
 
-  tags {
-    Name        = "${var.vpc_name}-private-rt"
-    environment = "${var.environment}"
-    depends_id  = "${var.depends_id}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-private-rt",
+        "environment", "${var.environment}"
+      )
+    )
+  }"
 }
 
 resource "aws_route" "private-nat" {
@@ -122,11 +156,15 @@ resource "aws_route_table" "public" {
   count  = "${var.enable}"
   vpc_id = "${aws_vpc.vpc.id}"
 
-  tags {
-    Name        = "${var.vpc_name}-public-rt"
-    environment = "${var.environment}"
-    depends_id  = "${var.depends_id}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-public-rt",
+        "environment", "${var.environment}"
+      )
+    )
+  }"
 }
 
 resource "aws_route" "public-igw" {
@@ -148,9 +186,9 @@ resource "aws_subnet" "public" {
     merge(
       var.public_subnet_tags,
       map(
-        "Name"       , "${var.vpc_name}-public-subnet",
+        "Name", "${var.vpc_name}-public-subnet",
         "environment", "${var.environment}",
-        "az"         , "${element(var.azs, count.index)}",
+        "az", "${element(var.azs, count.index)}",
       )
     )
   }"
@@ -167,9 +205,9 @@ resource "aws_subnet" "private" {
     merge(
       var.private_subnet_tags,
       map(
-        "Name"       , "${var.vpc_name}-private-subnet",
+        "Name", "${var.vpc_name}-private-subnet",
         "environment", "${var.environment}",
-        "az"         , "${element(var.azs, count.index)}",
+        "az", "${element(var.azs, count.index)}",
       )
     )
   }"
@@ -206,10 +244,15 @@ resource "aws_default_security_group" "vpc-default-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Name        = "${var.vpc_name}-default-sg"
-    environment = "${var.environment}"
-  }
+  tags = "${
+    merge(
+      var.tags,
+      map(
+        "Name", "${var.vpc_name}-default-sg",
+        "environment", "${var.environment}"
+      )
+    )
+  }"
 }
 
 resource "null_resource" "dummy_dependency" {
